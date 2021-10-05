@@ -73,10 +73,25 @@ st.write('Currently you are seeing last ', size,' candles')
 
 rect=['a']*size
 for i in range(size):
-    if data.Close.values[i-size] > data.Open.values[i-size]:
-        rect[i]=matplotlib.patches.Rectangle((pp.values[i-size], data.Low.values[i-size]),0.38*(data.High.values[i-size]-data.Low.values[i-size]), (data.High.values[i-size]-data.Low.values[i-size]), facecolor ='green',edgecolor = 'black')
-    elif data.Close.values[i-size] <= data.Open.values[i-size]:
-        rect[i]=matplotlib.patches.Rectangle((pp.values[i-size], data.Low.values[i-size]),0.38*(data.High.values[i-size]-data.Low.values[i-size]), (data.High.values[i-size]-data.Low.values[i-size]), facecolor ='red',edgecolor = 'black')
+    
+    if pl.values[i-size] > data.High.values[i-size]: #### GAP DOWN OPENING
+        if data.Close.values[i-size] > data.Open.values[i-size]:
+            rect[i]=matplotlib.patches.Rectangle((pp.values[i-size], data.Low.values[i-size]),0.38*abs(data.Low.values[i-size]-pc.values[i-size]), (data.High.values[i-size]-data.Low.values[i-size]), facecolor ='green',edgecolor = 'black')
+        elif data.Close.values[i-size] <= data.Open.values[i-size]:
+            rect[i]=matplotlib.patches.Rectangle((pp.values[i-size], data.Low.values[i-size]),0.38*abs(data.Low.values[i-size]-pc.values[i-size]), (data.High.values[i-size]-data.Low.values[i-size]), facecolor ='red',edgecolor = 'black')
+            
+    elif ph.values[i-size] < data.Low.values[i-size] : 
+         if data.Close.values[i-size] > data.Open.values[i-size]:
+            rect[i]=matplotlib.patches.Rectangle((pp.values[i-size], data.Low.values[i-size]),0.38*abs(data.High.values[i-size]-pc.values[i-size]), (data.High.values[i-size]-data.Low.values[i-size]), facecolor ='green',edgecolor = 'black')
+         elif data.Close.values[i-size] <= data.Open.values[i-size]:
+            rect[i]=matplotlib.patches.Rectangle((pp.values[i-size], data.Low.values[i-size]),0.38*abs(data.High.values[i-size]-pc.values[i-size]), (data.High.values[i-size]-data.Low.values[i-size]), facecolor ='red',edgecolor = 'black')
+    
+    else:
+         if data.Close.values[i-size] > data.Open.values[i-size]:
+            rect[i]=matplotlib.patches.Rectangle((pp.values[i-size], data.Low.values[i-size]),0.38*(data.High.values[i-size]-data.Low.values[i-size]), (data.High.values[i-size]-data.Low.values[i-size]), facecolor ='green',edgecolor = 'black')
+         elif data.Close.values[i-size] <= data.Open.values[i-size]:
+            rect[i]=matplotlib.patches.Rectangle((pp.values[i-size], data.Low.values[i-size]),0.38*(data.High.values[i-size]-data.Low.values[i-size]), (data.High.values[i-size]-data.Low.values[i-size]), facecolor ='red',edgecolor = 'black')
+    
         
 fig = plt.figure()
 ax = fig.add_subplot(111)    
