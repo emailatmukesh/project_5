@@ -96,7 +96,7 @@ price_min=[]
 def slop45max(data,yy):
     #data=data.set_index('width')
     data=data.reset_index()
-    max_idx = list(argrelextrema(data.High.values, np.greater, order=yy)[0])[-10:]
+    max_idx = list(argrelextrema(data.High.values, np.greater, order=yy)[0])
     
     
     print(max_idx)
@@ -121,7 +121,7 @@ def slop45max(data,yy):
 def slop45min(data,yy):
     #data=data.set_index('width')
     data=data.reset_index()
-    min_idx = list(argrelextrema(data.Low.values, np.less, order=yy)[0])[-10:]
+    min_idx = list(argrelextrema(data.Low.values, np.less, order=yy)[0])
     
     
    
