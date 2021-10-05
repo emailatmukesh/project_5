@@ -33,15 +33,39 @@ if options=='1m':
 elif options=='5m' or'15m':
     peri='50d'
 elif options=='30m' or'1h':
-    peri='3mo'
+    peri='5mo'
 elif options=='1d' or'1wk':
-    peri='1y'
+    peri='5y'
 
 data = yf.download(tickerSymbol, period=peri, interval=options)
 
-data['width']=(0.38*(data.High-data.Low.values)).cumsum()
-pp=data['width'].shift(1)
+pc=data['Close'].shift(1)
+ph=data['High'].shift(1)
+pl=data['Low'].shift(1)
+
 data.reset_index(inplace = True)
+size=200
+
+width=[]
+def width_fun(data):
+    for i in range(0,len(data)):
+        if pl.values[i] > data.High.values[i]: #### GAP DOWN OPENING
+            ddd= 0.38*abs(data.Low.values[i]-pc.values[i])
+            width.append(ddd)
+        
+        elif ph.values[i] < data.Low.values[i] :
+            ddd= 0.38*abs(data.High.values[i]-pc.values[i])
+            width.append(ddd)
+        
+        else: 
+            ddd= 0.38*(data.High.values[i]-data.Low.values[i])
+            width.append(ddd)
+            
+width_fun(data)  
+
+wx = (pd.Series(width)).cumsum()
+data['width']=wx
+pp=wx.shift(1)
 
 size = st.number_input('Insert an integer number of candle you want to see',min_value=1, max_value=None, value=100)
 st.write('Currently you are seeing last ', size,' candles')
