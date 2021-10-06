@@ -14,7 +14,6 @@ today = date.today()
 st.write("""
 #  Project 5 
 
-Shown are the stock closing price and volume of ticker!
 
 Ticker name should be from **Yahoo finance website** like AAPL, MSFT, GOGL.
 For Indian stock, please enter like this BRITANNIA.NS, HEROMOTOCO.NS as mentioned in Yahoo Financial website
@@ -154,15 +153,6 @@ def slop45min(data,yy):
             
      
             
-            
-    
-            
-    # print(pricez)
-    
-    # len2=len(data)-a
-    # ax.plot(max_idx[-5:],pricez[-5:])
-
-
 plt.xlim([min_x, max_x])
 plt.ylim([min_y-1, max_y+1])
 # ax.add_patch(rect[8])
@@ -175,11 +165,6 @@ slop45min(data,yy)
 
 
 
-
-
-
-
-
 for j in range(size):
     ax.add_patch(rect[j])
 
@@ -187,4 +172,213 @@ st.pyplot(fig)
 plt.show()    
 
 st.write('Y-axis is representing   **prices** & X-axis is representing nothing' )
+
+
+
+pc=data['Close'].shift(1)
+ph=data['High'].shift(1)
+pl=data['Low'].shift(1)
+
+width=[]
+
+signal=[1]
+stop_loss=[]
+pnl=[]
+cum_pnl=[]
+pat=0
+corr_pat=0
+selling=[0]
+buying=[0]
+
+data.reset_index(inplace = True)
+def width_fun(data):
+    for i in range(0,len(data)):
+        if pl.values[i] > data.High.values[i]: #### GAP DOWN OPENING
+            ddd= 0.38*abs(data.Low.values[i]-pc.values[i])
+            width.append(ddd)
+        
+        elif ph.values[i] < data.Low.values[i] :
+            ddd= 0.38*abs(data.High.values[i]-pc.values[i])
+            width.append(ddd)
+        
+        else: 
+            ddd= 0.38*(data.High.values[i]-data.Low.values[i])
+            width.append(ddd)
+            
+width_fun(data)  
+
+wx = (pd.Series(width)).cumsum()
+data['width']=wx
+pp=wx.shift(1)
+
+local=[0]
+          
+min_df=pd.DataFrame()
+max_df=pd.DataFrame()
+def three_red(df):
+    if df['Open'].values[-1] >df['Close'].values[-1] and  df['Open'].values[-2] >df['Close'].values[-2] and df['Open'].values[-3] >df['Close'].values[-3]:
+        return True
+    
+def three_green(df):
+    if df['Open'].values[-1] < df['Close'].values[-1] and  df['Open'].values[-2] < df['Close'].values[-2] and  df['Open'].values[-3] < df['Close'].values[-3]  :
+        return True      
+
+for i in  range(100,len(data)-2):
+    
+    data1=data[:i]
+    min_idx = list(argrelextrema(data1.Low.values, np.less, order=20)[0])[-1]
+    max_idx = list(argrelextrema(data1.High.values, np.greater, order=20)[0])[-1]
+    if min_idx not in local or max_idx not in local :
+        if signal[-1]==1:
+            
+            
+            if min_idx < max_idx:
+                x1=data1['width'].values[min_idx]
+                y1=data1.Low.values[min_idx]
+    
+                # min_df.loc[len(min_df.index)] = [0, 0]
+                # min_df.loc[len(min_df.index)] = [0, 0]
+                # min_df=min_df.shift(2)
+                # min_df.loc[0] = [y1, y1]
+                data1['new']= 1*(data1.width.values -x1) +y1
+                if data1.High.values[-1] < data1.new.values[-1] and three_red(data1)==True :
+                
+                    sell=data1['Close'].values[-1]
+                    signal=np.append(signal,-1)
+                    selling=np.append(selling,1)
+                    pat=pat+1
+                    #print(buy,'= i= ',i)
+                    stop_loss1= (data1.High.values[-7:]).max()
+                    stop_loss=np.append(stop_loss,stop_loss1)
+                    #data1['new']= 1*(data1.width.values -x1) +y1
+                    data1['26.5']= 0.5*(data1.width.values -x1) +y1
+                    data1['jar']= 2*(data1.width.values -x1) +y1
+                    local=np.append(local,min_idx)
+                    print('minimum idx==',min_idx)
+                    print('seeling entry= ',sell)
+                    
+                
+            elif  min_idx > max_idx:
+                x1=data1['width'].values[max_idx]
+                y1=data1.Low.values[max_idx]
+    
+                # max_df.loc[len(max_df.index)] = [0, 0]
+                # max_df=max_df.shift(1)
+                # max_df.loc[0] = [y1, y1]
+                data1['new']= -1*(data1.width.values -x1) +y1
+                if data1.Low.values[-1] > data1.new.values[-1] and three_green(data1)==True :
+                    
+                    print('maximum idx==',max_idx)
+                    buy=data1['Close'].values[-1]
+                    signal=np.append(signal,-1)
+                    buying=np.append(buying,1)
+                    pat=pat+1
+                    #print(buy,'= i= ',i)
+                    stop_loss1= (data1.Low.values[-7:]).min()
+                    stop_loss=np.append(stop_loss,stop_loss1)
+                    print('buying entry= ',buy)
+                    local=np.append(local,max_idx)
+                    
+                    
+                    data1['26.5']= -0.5*(data1.width.values -x1) +y1
+                    data1['jar']= -2*(data1.width.values -x1) +y1
+                   
+                
+                
+                
+                
+        elif signal[-1]==-1 and selling[-1]==1:    
+            if stop_loss[-1] <= data1["Close"].values[-1]:
+                
+                profit= sell- data["Close"].values[-1]
+                
+                print('selling exit point=',data["Close"].values[-1], 'sell point= ',i-1)
+                pnl=np.append(pnl,profit)
+                signal=np.append(signal,1)
+                selling=np.append(selling,-1)
+                cum_pnl=pnl.cumsum()
+                if profit>0:
+                    corr_pat=corr_pat+1
+                    
+            elif 2*(data1.width.values[-1] -x1) +y1 <= data1["Close"].values[-1]:
+                
+                profit= sell- data["Close"].values[-1]
+                
+                print('selling exit point=',data["Close"].values[-1], 'selling point= ', i-1)
+                pnl=np.append(pnl,profit)
+                signal=np.append(signal,1)
+                selling=np.append(selling,-1)
+                cum_pnl=pnl.cumsum()
+                if profit>0:
+                    corr_pat=corr_pat+1
+                    
+            elif 0.5*(data1.width.values[-1] -x1) + y1 >= data1["Close"].values[-1]:
+                
+                profit= sell- data["Close"].values[-1]
+                
+                print('selling exit point=',data["Close"].values[-1], 'sellingpoint= ', i-1)
+                pnl=np.append(pnl,profit)
+                signal=np.append(signal,1)
+                selling=np.append(selling,-1)
+                cum_pnl=pnl.cumsum()
+                if profit>0:
+                    corr_pat=corr_pat+1
+                    
+       
+                    
+        elif signal[-1]==-1 and buying[-1]==1:
+            if stop_loss[-1] >= data1["Close"].values[-1]:
+                
+                profit= data1["Close"].values[-1] - buy
+                print('buying exit point=',data1["Close"].values[-1],'point= ', i-1)
+                pnl=np.append(pnl,profit)
+                signal=np.append(signal,1)
+                buying=np.append(buying,-1)
+                cum_pnl=pnl.cumsum()
+                if profit>0:
+                    corr_pat=corr_pat+1
+                    
+            
+            elif -2*(data1.width.values[-1] -x1) +y1 >= data1["Close"].values[-1]:
+                
+                profit= data["Close"].values[-1] - buy
+                
+                print('buying exit point=',data["Close"].values[-1], 'point= ', i-1)
+                pnl=np.append(pnl,profit)
+                signal=np.append(signal,1)
+                buying=np.append(buying,-1)
+                cum_pnl=pnl.cumsum()
+                if profit>0:
+                    corr_pat=corr_pat+1
+                    
+            elif -0.5*(data1.width.values[-1] -x1) +y1 <= data1["Close"].values[-1]:
+                
+                profit= data["Close"].values[-1] - buy
+                
+                print('buying exit point=',data["Close"].values[-1], 'point= ', i-1)
+                pnl=np.append(pnl,profit)
+                signal=np.append(signal,1)
+                buying=np.append(buying,-1)
+                cum_pnl=pnl.cumsum()
+                if profit>0:
+                    corr_pat=corr_pat+1
+
+                
+                             
+
+figi = plt.figure()
+axi = figi.add_subplot(111)  
+
+try:
+    lastm=np.round(cum_pnl[-1],2)
+    jjjj= np.round(float(corr_pat)/float(pat),2)
+    lbl= "[Accuracy = " +str(100*jjjj)+ '%]' + '[ Profit = '+ str(lastm) +'] [Total trade = '+ str(pat)+ "]  "
+    #return lbl
+except:
+    lbl='No pattern found '
+
+axi.plot(cum_pnl,label=lbl)
+axi.legend()
+
+st.pyplot(figi)
 
